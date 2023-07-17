@@ -22,32 +22,44 @@ func (i forthInt) getType() string {
 	return "forthInt"
 }
 
-var ops = map[string]func(stack *[]word, output *string){
-	"+": func(stack *[]word, _ *string) {
+type state struct {
+	buf    []rune
+	stack  []word
+	output string
+}
+
+var ops = map[string]func(st *state){
+	"+": func(state *state) {
+		stack := &(*state).stack
 		x2 := pop(stack).int()
 		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1+x2)
 	},
-	"-": func(stack *[]word, _ *string) {
+	"-": func(state *state) {
+		stack := &(*state).stack
 		x2 := pop(stack).int()
 		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1-x2)
 	},
-	"*": func(stack *[]word, _ *string) {
+	"*": func(state *state) {
+		stack := &(*state).stack
 		x2 := pop(stack).int()
 		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1*x2)
 	},
-	"/": func(stack *[]word, _ *string) {
+	"/": func(state *state) {
+		stack := &(*state).stack
 		x2 := pop(stack).int()
 		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1/x2)
 	},
-	".": func(stack *[]word, output *string) {
+	".": func(state *state) {
+		stack := &(*state).stack
+		output := &(*state).output
 		x := pop(stack)
 		if x.getType() == "forthInt" {
 			*output += fmt.Sprintf("%d ", x)
@@ -55,22 +67,31 @@ var ops = map[string]func(stack *[]word, output *string){
 		}
 		*output += fmt.Sprintf("%s", x)
 	},
-	"EMIT": func(stack *[]word, output *string) {
-		*output += fmt.Sprintf("%c", rune(pop(stack).int()))
+	"EMIT": func(st *state) {
+		(*st).output += fmt.Sprintf("%c", rune(pop(&(*st).stack).int()))
 	},
-	"CR": func(_ *[]word, output *string) {
+	"CR": func(state *state) {
+		output := &(*state).output
 		*output += "\n"
 	},
-	"SWAP": func(stack *[]word, _ *string) {
+	"SWAP": func(state *state) {
+		stack := &(*state).stack
 		x1 := pop(stack)
 		x2 := pop(stack)
 
 		*stack = append(*stack, x1, x2)
 	},
-	"DUP": func(stack *[]word, _ *string) {
+	"DUP": func(state *state) {
+		stack := &(*state).stack
 		x := pop(stack)
 
 		*stack = append(*stack, x, x)
+	},
+	"WORDS": func(state *state) {
+		/*for s, _ := range ops {
+			*output += fmt.Sprintf("%s ", s)
+		}*/
+		panic("not implemented") //TODO: implement
 	},
 }
 
@@ -78,45 +99,48 @@ func main() {}
 
 func parse(input string) (string, error) {
 	reader := strings.NewReader(input)
-	output := ""
-	stack := make([]word, 0)
+	st := &state{
+		buf:    make([]rune, 0),
+		stack:  make([]word, 0),
+		output: "",
+	}
 
-	buf := make([]rune, 0)
 	for true {
 		if reader.Len() <= 0 {
-			err := act(&buf, &stack, &output)
+			err := act(st)
 			if err != nil {
-				return output, err
+				return st.output, err
 			}
 			break
 		}
 		r, _, _ := reader.ReadRune()
 
 		if r == ' ' {
-			err := act(&buf, &stack, &output)
+			err := act(st)
 			if err != nil {
-				return output, err
+				return st.output, err
 			}
 			continue
 		}
 
-		buf = append(buf, r)
+		st.buf = append(st.buf, r)
 	}
-	return output, nil
+	return st.output, nil
 }
 
-func act(buf *[]rune, stack *[]word, output *string) error {
+func act(state *state) error {
+	buf := &(*state).buf
 	x := string(*buf)
 	*buf = make([]rune, 0)
 
 	i, err := strconv.Atoi(x)
 	if err == nil {
-		*stack = append(*stack, forthInt(i))
+		(*state).stack = append((*state).stack, forthInt(i))
 		return nil
 	}
 
 	if val, ok := ops[x]; ok {
-		val(stack, output)
+		val(state)
 		return nil
 	}
 
