@@ -60,6 +60,17 @@ func TestParseMore(t *testing.T) {
 	}
 }
 
+func TestParseEmit(t *testing.T) {
+	input := "66 EMIT"
+	want := "B\n"
+
+	got, err := parse(input)
+
+	if want != got || err != nil {
+		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
+	}
+}
+
 func TestParseInvalidThing(t *testing.T) {
 	input := "4 2 dsgb"
 

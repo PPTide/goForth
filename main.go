@@ -45,6 +45,9 @@ var ops = map[string]func(stack *[]word, output *string){
 	".": func(stack *[]word, output *string) {
 		*output += fmt.Sprintf("%d\n", pop(stack))
 	},
+	"EMIT": func(stack *[]word, output *string) {
+		*output += fmt.Sprintf("%c\n", rune(pop(stack).int()))
+	},
 }
 
 func main() {}
