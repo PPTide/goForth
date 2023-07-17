@@ -7,63 +7,54 @@ import (
 
 func TestParseAdd(t *testing.T) {
 	input := "4 2 + ."
-	want := "6\n"
+	want := "6"
 
-	got, err := parse(input)
-
-	if want != got || err != nil {
-		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
-	}
+	checkParse(t, input, want)
 }
 
 func TestParseMult(t *testing.T) {
 	input := "4 2 * ."
-	want := "8\n"
+	want := "8"
 
-	got, err := parse(input)
-
-	if want != got || err != nil {
-		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
-	}
+	checkParse(t, input, want)
 }
 
 func TestParseSub(t *testing.T) {
 	input := "4 2 - ."
-	want := "2\n"
+	want := "2"
 
-	got, err := parse(input)
-
-	if want != got || err != nil {
-		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
-	}
+	checkParse(t, input, want)
 }
 
 func TestParseDiv(t *testing.T) {
 	input := "4 2 / ."
-	want := "2\n"
+	want := "2"
 
-	got, err := parse(input)
-
-	if want != got || err != nil {
-		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
-	}
+	checkParse(t, input, want)
 }
 
 func TestParseMore(t *testing.T) {
 	input := "4 2 + 3 - ."
-	want := "3\n"
+	want := "3"
 
-	got, err := parse(input)
-
-	if want != got || err != nil {
-		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
-	}
+	checkParse(t, input, want)
 }
 
 func TestParseEmit(t *testing.T) {
 	input := "66 EMIT"
-	want := "B\n"
+	want := "B"
 
+	checkParse(t, input, want)
+}
+
+func TestParseCR(t *testing.T) {
+	input := "66 EMIT"
+	want := "B"
+
+	checkParse(t, input, want)
+}
+
+func checkParse(t *testing.T, input string, want string) {
 	got, err := parse(input)
 
 	if want != got || err != nil {
@@ -71,7 +62,7 @@ func TestParseEmit(t *testing.T) {
 	}
 }
 
-func TestParseInvalidThing(t *testing.T) {
+func TestParseInvalidWord(t *testing.T) {
 	input := "4 2 dsgb"
 
 	got, err := parse(input)

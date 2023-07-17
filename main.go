@@ -43,10 +43,13 @@ var ops = map[string]func(stack *[]word, output *string){
 		*stack = append(*stack, x1/x2)
 	},
 	".": func(stack *[]word, output *string) {
-		*output += fmt.Sprintf("%d\n", pop(stack))
+		*output += fmt.Sprintf("%d", pop(stack))
 	},
 	"EMIT": func(stack *[]word, output *string) {
-		*output += fmt.Sprintf("%c\n", rune(pop(stack).int()))
+		*output += fmt.Sprintf("%c", rune(pop(stack).int()))
+	},
+	"CR": func(_ *[]word, output *string) {
+		*output += "\n"
 	},
 }
 
