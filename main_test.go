@@ -49,6 +49,17 @@ func TestParseDiv(t *testing.T) {
 	}
 }
 
+func TestParseMore(t *testing.T) {
+	input := "4 2 + 3 - ."
+	want := "3\n"
+
+	got, err := parse(input)
+
+	if want != got || err != nil {
+		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
+	}
+}
+
 func TestParseInvalidThing(t *testing.T) {
 	input := "4 2 dsgb"
 
