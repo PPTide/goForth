@@ -9,20 +9,22 @@ import (
 
 type word interface {
 	getType() string
-	int() forthInt
 }
 
 type forthInt int
 
-func (i forthInt) int() forthInt {
-	return forthInt(i)
-}
+type forthExecutionToken func(st state)
 
 func (i forthInt) getType() string {
 	return "forthInt"
 }
 
+func (xt forthExecutionToken) getType() string {
+	return "xt"
+}
+
 type state struct {
+	reader *strings.Reader
 	buf    []rune
 	stack  []word
 	output string
@@ -32,29 +34,29 @@ type state struct {
 var ops = map[string]func(st *state){
 	"+": func(state *state) {
 		stack := &(*state).stack
-		x2 := pop(stack).int()
-		x1 := pop(stack).int()
+		x2 := pop(stack).(forthInt)
+		x1 := pop(stack).(forthInt)
 
 		*stack = append(*stack, x1+x2)
 	},
 	"-": func(state *state) {
 		stack := &(*state).stack
-		x2 := pop(stack).int()
-		x1 := pop(stack).int()
+		x2 := pop(stack).(forthInt)
+		x1 := pop(stack).(forthInt)
 
 		*stack = append(*stack, x1-x2)
 	},
 	"*": func(state *state) {
 		stack := &(*state).stack
-		x2 := pop(stack).int()
-		x1 := pop(stack).int()
+		x2 := pop(stack).(forthInt)
+		x1 := pop(stack).(forthInt)
 
 		*stack = append(*stack, x1*x2)
 	},
 	"/": func(state *state) {
 		stack := &(*state).stack
-		x2 := pop(stack).int()
-		x1 := pop(stack).int()
+		x2 := pop(stack).(forthInt)
+		x1 := pop(stack).(forthInt)
 
 		*stack = append(*stack, x1/x2)
 	},
@@ -69,7 +71,7 @@ var ops = map[string]func(st *state){
 		*output += fmt.Sprintf("%s", x)
 	},
 	"EMIT": func(st *state) {
-		(*st).output += fmt.Sprintf("%c", rune(pop(&(*st).stack).int()))
+		(*st).output += fmt.Sprintf("%c", rune(pop(&(*st).stack).(forthInt)))
 	},
 	"CR": func(state *state) {
 		output := &(*state).output
@@ -93,16 +95,24 @@ var ops = map[string]func(st *state){
 			(*st).output += fmt.Sprintf("%s ", s)
 		}
 	},
+	":": func(st *state) { // Word definition
+		//TODO: implement
+		panic("not implemented")
+	},
+	"EXECUTE": func(st *state) {
+
+	},
 }
 
 func Parse(input string) (string, error) {
-	reader := strings.NewReader(input)
 	st := &state{
+		reader: strings.NewReader(input),
 		buf:    make([]rune, 0),
 		stack:  make([]word, 0),
 		output: "",
 		ops:    ops,
 	}
+	reader := (*st).reader
 
 	for true {
 		if reader.Len() <= 0 {
