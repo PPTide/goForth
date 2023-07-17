@@ -1,4 +1,4 @@
-package main
+package goForth
 
 import (
 	"errors"
@@ -69,28 +69,30 @@ func TestParseDup(t *testing.T) {
 }
 
 func checkParse(t *testing.T, input string, want string) {
-	got, err := parse(input)
+	got, err := Parse(input)
 
 	if want != got || err != nil {
-		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
+		t.Fatalf(`Parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, want)
+	}
+}
+
+func TestParseWords(t *testing.T) {
+	input := "WORDS"
+
+	got, err := Parse(input)
+	t.Log(got)
+
+	if err != nil {
+		t.Fatalf(`Parse("%s") = (%s, %v)`, input, got, err)
 	}
 }
 
 func TestParseInvalidWord(t *testing.T) {
 	input := "4 2 dsgb"
 
-	got, err := parse(input)
+	got, err := Parse(input)
 
 	if errors.Is(errors.New("not implemented"), err) {
-		t.Fatalf(`parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, "")
+		t.Fatalf(`Parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, "")
 	}
-}
-
-func checkArray[T int](a1 []T, a2 []T) bool {
-	for i := range a1 {
-		if a1[i] != a2[i] {
-			return false
-		}
-	}
-	return true
 }

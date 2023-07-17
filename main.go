@@ -1,4 +1,4 @@
-package main
+package goForth
 
 import (
 	"errors"
@@ -26,6 +26,7 @@ type state struct {
 	buf    []rune
 	stack  []word
 	output string
+	ops    map[string]func(st *state)
 }
 
 var ops = map[string]func(st *state){
@@ -87,22 +88,20 @@ var ops = map[string]func(st *state){
 
 		*stack = append(*stack, x, x)
 	},
-	"WORDS": func(state *state) {
-		/*for s, _ := range ops {
-			*output += fmt.Sprintf("%s ", s)
-		}*/
-		panic("not implemented") //TODO: implement
+	"WORDS": func(st *state) {
+		for s := range (*st).ops {
+			(*st).output += fmt.Sprintf("%s ", s)
+		}
 	},
 }
 
-func main() {}
-
-func parse(input string) (string, error) {
+func Parse(input string) (string, error) {
 	reader := strings.NewReader(input)
 	st := &state{
 		buf:    make([]rune, 0),
 		stack:  make([]word, 0),
 		output: "",
+		ops:    ops,
 	}
 
 	for true {
