@@ -7,44 +7,52 @@ import (
 	"strings"
 )
 
-var ops = map[string]func(stack *[]int, output *string){
-	"+": func(stack *[]int, _ *string) {
-		x2 := pop(stack)
-		x1 := pop(stack)
+type word interface {
+	int() forthInt
+}
+
+type forthInt int
+
+func (i forthInt) int() forthInt {
+	return forthInt(i)
+}
+
+var ops = map[string]func(stack *[]word, output *string){
+	"+": func(stack *[]word, _ *string) {
+		x2 := pop(stack).int()
+		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1+x2)
 	},
-	"-": func(stack *[]int, _ *string) {
-		x2 := pop(stack)
-		x1 := pop(stack)
+	"-": func(stack *[]word, _ *string) {
+		x2 := pop(stack).int()
+		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1-x2)
 	},
-	"*": func(stack *[]int, _ *string) {
-		x2 := pop(stack)
-		x1 := pop(stack)
+	"*": func(stack *[]word, _ *string) {
+		x2 := pop(stack).int()
+		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1*x2)
 	},
-	"/": func(stack *[]int, _ *string) {
-		x2 := pop(stack)
-		x1 := pop(stack)
+	"/": func(stack *[]word, _ *string) {
+		x2 := pop(stack).int()
+		x1 := pop(stack).int()
 
 		*stack = append(*stack, x1/x2)
 	},
-	".": func(stack *[]int, output *string) {
+	".": func(stack *[]word, output *string) {
 		*output += fmt.Sprintf("%d\n", pop(stack))
 	},
 }
 
-func main() {
-	parse("4 2 + .")
-}
+func main() {}
 
 func parse(input string) (string, error) {
 	reader := strings.NewReader(input)
 	output := ""
-	stack := make([]int, 0)
+	stack := make([]word, 0)
 
 	buf := make([]rune, 0)
 	for true {
@@ -70,13 +78,13 @@ func parse(input string) (string, error) {
 	return output, nil
 }
 
-func act(buf *[]rune, stack *[]int, output *string) error {
+func act(buf *[]rune, stack *[]word, output *string) error {
 	x := string(*buf)
 	*buf = make([]rune, 0)
 
 	i, err := strconv.Atoi(x)
 	if err == nil {
-		*stack = append(*stack, i)
+		*stack = append(*stack, forthInt(i))
 		return nil
 	}
 
