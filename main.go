@@ -8,6 +8,7 @@ import (
 )
 
 type word interface {
+	getType() string
 	int() forthInt
 }
 
@@ -15,6 +16,10 @@ type forthInt int
 
 func (i forthInt) int() forthInt {
 	return forthInt(i)
+}
+
+func (i forthInt) getType() string {
+	return "forthInt"
 }
 
 var ops = map[string]func(stack *[]word, output *string){
@@ -43,13 +48,29 @@ var ops = map[string]func(stack *[]word, output *string){
 		*stack = append(*stack, x1/x2)
 	},
 	".": func(stack *[]word, output *string) {
-		*output += fmt.Sprintf("%d", pop(stack))
+		x := pop(stack)
+		if x.getType() == "forthInt" {
+			*output += fmt.Sprintf("%d ", x)
+			return
+		}
+		*output += fmt.Sprintf("%s", x)
 	},
 	"EMIT": func(stack *[]word, output *string) {
 		*output += fmt.Sprintf("%c", rune(pop(stack).int()))
 	},
 	"CR": func(_ *[]word, output *string) {
 		*output += "\n"
+	},
+	"SWAP": func(stack *[]word, _ *string) {
+		x1 := pop(stack)
+		x2 := pop(stack)
+
+		*stack = append(*stack, x1, x2)
+	},
+	"DUP": func(stack *[]word, _ *string) {
+		x := pop(stack)
+
+		*stack = append(*stack, x, x)
 	},
 }
 
