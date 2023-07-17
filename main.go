@@ -1,7 +1,6 @@
 package goForth
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -112,48 +111,54 @@ func Parse(input string) (string, error) {
 		output: "",
 		ops:    ops,
 	}
-	reader := (*st).reader
 
-	for true {
-		if reader.Len() <= 0 {
-			err := act(st)
-			if err != nil {
-				return st.output, err
-			}
-			break
-		}
-		r, _, _ := reader.ReadRune()
+	interpret(st)
 
-		if r == ' ' {
-			err := act(st)
-			if err != nil {
-				return st.output, err
-			}
-			continue
-		}
-
-		st.buf = append(st.buf, r)
-	}
 	return st.output, nil
 }
 
-func act(state *state) error {
-	buf := &(*state).buf
-	x := string(*buf)
-	*buf = make([]rune, 0)
+func interpret(st *state) { // https://forth-standard.org/standard/usage#section.3.4
+a: // a. Skip leading spaces and parse a name (see 3.4.1); //TODO: skip leading spaces
+	name := parseWord(st)
 
-	i, err := strconv.Atoi(x)
+	if len(name) <= 0 {
+		// error?
+		return
+	}
+
+	// b. Search the dictionary name space (see 3.4.2). If a definition name matching the string is found:
+	xt, ok := (*st).ops[name]
+	if ok {
+		// 1. if interpreting, perform the interpretation semantics of the definition (see 3.4.3.2), and continue at a).
+		xt(st)
+		goto a
+	}
+
+	// c. If a definition name matching the string is not found, attempt to convert the string to a number (see 3.4.1.3). If successful:
+	//TODO: implement https://forth-standard.org/standard/usage#usage:numbers
+	num, err := strconv.Atoi(name)
 	if err == nil {
-		(*state).stack = append((*state).stack, forthInt(i))
-		return nil
+		// 1. if interpreting, place the number on the data stack, and continue at a);
+		(*st).stack = append((*st).stack, forthInt(num))
+		goto a
 	}
 
-	if val, ok := ops[x]; ok {
-		val(state)
-		return nil
-	}
+	// d. If unsuccessful, an ambiguous condition exists (see 3.4.4).
+	panic("word not found")
+}
 
-	return errors.New("not implemented")
+func parseWord(st *state) string {
+	reader := (*st).reader
+	for reader.Len() >= 1 {
+		r, _, _ := reader.ReadRune()
+		if r == ' ' {
+			break
+		}
+		(*st).buf = append((*st).buf, r)
+	}
+	w := string((*st).buf)
+	(*st).buf = make([]rune, 0)
+	return w
 }
 
 func pop[T any](stack *[]T) T {

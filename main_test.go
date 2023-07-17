@@ -1,7 +1,6 @@
 package goForth
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -84,15 +83,5 @@ func TestParseWords(t *testing.T) {
 
 	if err != nil {
 		t.Fatalf(`Parse("%s") = (%s, %v)`, input, got, err)
-	}
-}
-
-func TestParseInvalidWord(t *testing.T) {
-	input := "4 2 dsgb"
-
-	got, err := Parse(input)
-
-	if errors.Is(errors.New("not implemented"), err) {
-		t.Fatalf(`Parse("%s") = (%s, %v), want match for (%s, nil)`, input, got, err, "")
 	}
 }
