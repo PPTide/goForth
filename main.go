@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -54,11 +53,20 @@ var dictionary = forthDictionary{
 			(*st).dataStack = append((*st).dataStack, x1/x2)
 		},
 	},
+	":": forthDictionaryEntry{
+		codeSpace: func(st *state) {
+			(*st).interpreting = false
+			(*st).compiling = true
+
+			(*st).definitionName = forthNameSpace(readName(st))
+		},
+	},
 }
 
 func main() {
 	st := &state{
-		dictionary: dictionary,
+		dictionary:   dictionary,
+		interpreting: true,
 	}
 	(*st).dictionary["QUIT"].codeSpace(st)
 
@@ -89,47 +97,81 @@ func main() {
 
 // https://forth-standard.org/standard/usage#section.3.4
 func interpret(input string, st *state) error {
+	(*st).input = strings.NewReader(input)
 	reader := (*st).input
-	reader = strings.NewReader(input)
 
 	for true {
 		if reader.Len() <= 0 {
 			break
 		}
 
-		nameA := make([]rune, 0)
-		for true { // Read Name
-			if reader.Len() <= 0 {
-				break
-			}
-			r, _, err := reader.ReadRune()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if r == ' ' && len(nameA) == 0 {
-				continue
-			}
-			if r == ' ' {
-				break
-			}
-			nameA = append(nameA, r)
-		}
+		nameA := readName(st)
 
+		if (*st).compiling && string(nameA) == ";" {
+			definitionStack := (*st).definitionStack
+			(*st).dictionary[(*st).definitionName] = forthDictionaryEntry{
+				codeSpace: func(st *state) {
+					for _, entry := range definitionStack {
+						entry.codeSpace(st)
+					}
+				},
+			}
+
+			(*st).compiling = false
+			(*st).interpreting = true
+			(*st).definitionStack = make(forthDefinitionStack, 0)
+			continue
+		}
 		n, exist := (*st).dictionary[forthNameSpace(nameA)]
 		if exist {
-			// if interpreting
-			n.codeSpace(st)
-			continue
+			if (*st).interpreting {
+				n.codeSpace(st)
+				continue
+			}
+			if (*st).compiling {
+				(*st).definitionStack = append((*st).definitionStack, n)
+				continue
+			}
 		}
 		if n, err := convertInputNumber(string(nameA)); err == nil {
-			// if interpreting
-			(*st).dataStack = append((*st).dataStack, n)
-			continue
+			if (*st).interpreting {
+				(*st).dataStack = append((*st).dataStack, n)
+				continue
+			}
+			if (*st).compiling {
+				(*st).definitionStack = append((*st).definitionStack, forthDictionaryEntry{codeSpace: func(st *state) {
+					(*st).dataStack = append((*st).dataStack, n)
+				}})
+				continue
+			}
 		}
 		// https://forth-standard.org/standard/usage#usage:ambiguous
-		return errors.New("Ambiguous condition")
+		return fmt.Errorf("ambiguous condition: %s", string(nameA))
 	}
 	return nil
+}
+
+func readName(st *state) []rune {
+	reader := (*st).input
+
+	nameA := make([]rune, 0)
+	for true { // Read Name
+		if reader.Len() <= 0 {
+			break
+		}
+		r, _, err := reader.ReadRune()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if r == ' ' && len(nameA) == 0 {
+			continue
+		}
+		if r == ' ' {
+			break
+		}
+		nameA = append(nameA, r)
+	}
+	return nameA
 }
 
 func convertInputNumber(str string) (int, error) {

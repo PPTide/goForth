@@ -50,11 +50,25 @@ type forthDictionaryEntry struct {
 }
 type forthCodeSpace func(st *state)
 type forthDataSpace struct {
+	definition []forthDictionaryEntry
 }
+type forthDefinitionStack []forthDictionaryEntry
 
 type state struct {
 	input      *strings.Reader
 	dictionary forthDictionary
 
 	dataStack dataStack
+
+	interpreting bool
+	compiling    bool
+
+	definitionName  forthNameSpace
+	definitionStack forthDefinitionStack
+}
+
+func (ds *forthDefinitionStack) pop() forthDictionaryEntry {
+	x := (*ds)[len(*ds)-1]
+	*ds = (*ds)[0 : len(*ds)-1]
+	return x
 }
