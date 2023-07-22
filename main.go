@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -29,6 +30,30 @@ var dictionary = forthDictionary{
 			(*st).dataStack = append((*st).dataStack, x1+x2)
 		},
 	},
+	"-": forthDictionaryEntry{
+		codeSpace: func(st *state) {
+			x2 := (*st).dataStack.pop()
+			x1 := (*st).dataStack.pop()
+
+			(*st).dataStack = append((*st).dataStack, x1-x2)
+		},
+	},
+	"*": forthDictionaryEntry{
+		codeSpace: func(st *state) {
+			x2 := (*st).dataStack.pop()
+			x1 := (*st).dataStack.pop()
+
+			(*st).dataStack = append((*st).dataStack, x1*x2)
+		},
+	},
+	"/": forthDictionaryEntry{
+		codeSpace: func(st *state) {
+			x2 := (*st).dataStack.pop()
+			x1 := (*st).dataStack.pop()
+
+			(*st).dataStack = append((*st).dataStack, x1/x2)
+		},
+	},
 }
 
 func main() {
@@ -52,14 +77,18 @@ func main() {
 			log.Fatal(err)
 		}
 
-		interpret(input, st)
+		err = interpret(input, st)
+
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Printf("OK\n")
 	}
 }
 
 // https://forth-standard.org/standard/usage#section.3.4
-func interpret(input string, st *state) {
+func interpret(input string, st *state) error {
 	reader := (*st).input
 	reader = strings.NewReader(input)
 
@@ -98,11 +127,20 @@ func interpret(input string, st *state) {
 			continue
 		}
 		// https://forth-standard.org/standard/usage#usage:ambiguous
-		log.Fatal("Ambiguous condition")
+		return errors.New("Ambiguous condition")
 	}
+	return nil
 }
 
 func convertInputNumber(str string) (int, error) {
 	//TODO: Interpret numbers correctly https://forth-standard.org/standard/usage#subsubsection.3.4.1.3
 	return strconv.Atoi(str)
+}
+
+func initializeState() *state {
+	st := &state{
+		dictionary: dictionary,
+	}
+	(*st).dictionary["QUIT"].codeSpace(st)
+	return st
 }
