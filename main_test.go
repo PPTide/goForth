@@ -5,12 +5,8 @@ import (
 	"testing"
 )
 
-func parseTest(testString string, _ *state, t *testing.T) {
+func parseTest(testString string, st *state, t *testing.T) {
 	//TODO: pass state as an argument record stack depth so it can be eliminated
-	st := &state{
-		dictionary: dictionary,
-	}
-	(*st).dictionary["QUIT"].codeSpace(st)
 	st2 := *st
 
 	// parse Test Harness

@@ -64,11 +64,7 @@ var dictionary = forthDictionary{
 }
 
 func main() {
-	st := &state{
-		dictionary:   dictionary,
-		interpreting: true,
-	}
-	(*st).dictionary["QUIT"].codeSpace(st)
+	st := initializeState()
 
 	scanner := bufio.NewScanner(os.Stdin)
 	for true {
@@ -181,7 +177,8 @@ func convertInputNumber(str string) (int, error) {
 
 func initializeState() *state {
 	st := &state{
-		dictionary: dictionary,
+		dictionary:   dictionary,
+		interpreting: true,
 	}
 	(*st).dictionary["QUIT"].codeSpace(st)
 	return st
